@@ -1,4 +1,29 @@
-.env**
-dist
-node_modules
-output
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Cache and data directories
+/cache/
+/output/
+
+# Node.js
+node_modules/
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+
+# Build output
+/dist/
+/build/
+
+# IDE and editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
