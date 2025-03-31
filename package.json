@@ -4,20 +4,27 @@
   "description": "A Discord bot that analyzes user messages using OpenAI's GPT.",
   "main": "dist/service/index.js",
   "scripts": {
-    "start": "node dist/service/index.js",
+    "start": "node dist/index.js",
+    "start:bun": "bun run dist/index.js",
+    "service": "ts-node src/index.ts",
+    "service:bun": "bun run src/index.ts",
     "build": "tsc",
-    "dev": "ts-node src/service/index.ts"
+    "build:bun": "bun build ./src --outdir=./dist --target=node",
+    "dev": "ts-node src/service/index.ts",
+    "dev:bun": "bun run src/service/index.ts",
+    "install-bun": "curl -fsSL https://bun.sh/install | bash"
   },
   "dependencies": {
     "discord.js": "^14.11.0",
     "dotenv": "^16.0.3",
-    "openai": "^4.0.0"
+    "openai": "^4.0.0",
+    "@anthropic-ai/sdk": "^0.11.0"
   },
   "devDependencies": {
     "typescript": "^5.2.2",
     "ts-node": "^10.9.1"
   },
   "engines": {
-    "node": ">=22.14.0"
+    "bun": ">=1.0.0"
   }
 }

@@ -1,23 +1,22 @@
-# Use Node.js v22 as the base image
-FROM node:22
+FROM oven/bun:latest
 
-# Set the working directory
 WORKDIR /app
 
-# Copy package.json and package-lock.json
+# Copy package files and install dependencies
 COPY package*.json ./
+RUN bun install --frozen-lockfile
 
-# Install dependencies
-RUN npm install
-
-# Copy the rest of the application
+# Copy source code
 COPY . .
 
 # Build the TypeScript code
-RUN npm run build
+RUN bun run build
 
-# Expose the application port (if needed)
-EXPOSE 3000
+# Create necessary directories
+RUN mkdir -p cache output
 
-# Start the application
-CMD ["npm", "start"]
+# Set environment variables (these will be overridden by container ENV)
+ENV NODE_ENV=production
+
+# Run as a service
+CMD ["bun", "start"]
