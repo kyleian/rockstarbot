@@ -92,8 +92,8 @@ function maskSensitiveData(data: string): string {
 
 export async function pollUserData(
     providedClient?: Client,
-    guildId: string = GUILD_ID,
-    channelId: string = CHANNEL_ID,
+    guildId: string = appConfig.guildId,
+    channelId?: string,
     timeSpanMonths: number = 3,
     userId?: string
 ): Promise<Message[]> {
@@ -106,7 +106,7 @@ export async function pollUserData(
     }
 
     // Check cache first
-    const cachedMessages = getCachedMessages(guildId, channelId, timeSpanMonths);
+    const cachedMessages = getCachedMessages(guildId, channelId || '', timeSpanMonths);
     if (cachedMessages) {
         return cachedMessages;
     }
@@ -121,7 +121,7 @@ export async function pollUserData(
     });
 
     if (!providedClient) {
-        await client.login(DISCORD_TOKEN);
+        await client.login(appConfig.token);
         console.log(`Logged in as ${maskSensitiveData(client.user?.tag || '')}`);
     }
 
@@ -138,80 +138,28 @@ export async function pollUserData(
         }
         console.log(`Guild found: ${guild.name} (${maskSensitiveData(guild.id)})`);
 
+        // If no channel ID is provided, fetch messages from all text channels
+        if (!channelId) {
+            const messages: Message[] = [];
+            const textChannels = guild.channels.cache.filter(channel => 
+                channel.type === ChannelType.GuildText
+            ) as Collection<string, TextChannel>;
+
+            for (const channel of textChannels.values()) {
+                const channelMessages = await fetchChannelMessages(channel, timeSpanMonths, userId);
+                messages.push(...channelMessages);
+            }
+            return messages;
+        }
+
+        // If channel ID is provided, fetch from specific channel
         const channel = await guild.channels.fetch(channelId) as TextChannel;
         if (!channel) {
             console.log('Channel not found!');
             return [];
         }
-        console.log(`Channel found: ${channel.name} (${maskSensitiveData(channel.id)})`);
 
-        const cutoffDate = new Date();
-        cutoffDate.setMonth(cutoffDate.getMonth() - timeSpanMonths);
-        console.log(`Fetching messages from ${cutoffDate.toISOString()} to now`);
-
-        const messages: Message[] = [];
-        let lastId: string | undefined = undefined;
-        let batchCount = 0;
-        const MAX_BATCHES = 30; // Limit to prevent excessive fetching
-
-        while (batchCount < MAX_BATCHES) {
-            console.log(`Fetching batch ${++batchCount}${lastId ? ` before message ${lastId}` : ''}`);
-            
-            // Properly type the fetch options
-            const fetchOptions = { limit: 100 } as { limit: number; before?: string };
-            if (lastId) {
-                fetchOptions.before = lastId;
-            }
-
-            try {
-                // Get messages as a Collection
-                const messageBatch = await channel.messages.fetch(fetchOptions);
-                
-                if (messageBatch.size === 0) {
-                    console.log('No more messages to fetch');
-                    break;
-                }
-
-                // Convert the Collection to an array of properly typed Message objects
-                const messageArray = Array.from(messageBatch.values()) as Message[];
-                
-                // Filter messages by date and exclude specified users
-                const filteredMessages = messageArray.filter(
-                    (msg) => msg.createdAt > cutoffDate && 
-                             !appConfig.excludedUsers.includes(msg.author.id)
-                );
-                
-                if (filteredMessages.length === 0) {
-                    console.log('No messages found in this batch that meet criteria');
-                    
-                    // If we've hit our batch limit with no results, give up
-                    if (batchCount >= MAX_BATCHES) {
-                        console.log(`Reached maximum batch limit (${MAX_BATCHES}) with no valid messages found. Giving up.`);
-                        break;
-                    }
-                } else {
-                    // Add messages to our collection
-                    messages.push(...filteredMessages);
-                    console.log(`Batch ${batchCount}: Found ${filteredMessages.length} messages within timespan`);
-                }
-
-                // Get the ID of the last message for pagination
-                const lastMessage = messageBatch.last();
-                if (lastMessage) {
-                    lastId = lastMessage.id;
-                }
-            } catch (error) {
-                console.error("Error fetching message batch:", error);
-                break;
-            }
-        }
-
-        console.log(`Total messages collected: ${messages.length}`);
-        
-        // Cache the messages for future use
-        saveMessagesToCache(messages, guildId, channelId, timeSpanMonths);
-        
-        return messages;
+        return await fetchChannelMessages(channel, timeSpanMonths, userId);
     } catch (error) {
         console.error("Error fetching data:", error);
         return [];
@@ -220,6 +168,80 @@ export async function pollUserData(
             client.destroy();
         }
     }
+}
+
+async function fetchChannelMessages(
+    channel: TextChannel, 
+    timeSpanMonths: number,
+    userId?: string
+): Promise<Message[]> {
+    const cutoffDate = new Date();
+    cutoffDate.setMonth(cutoffDate.getMonth() - timeSpanMonths);
+    console.log(`Fetching messages from ${cutoffDate.toISOString()} to now`);
+
+    const messages: Message[] = [];
+    let lastId: string | undefined = undefined;
+    let batchCount = 0;
+    const MAX_BATCHES = 30; // Limit to prevent excessive fetching
+
+    while (batchCount < MAX_BATCHES) {
+        console.log(`Fetching batch ${++batchCount}${lastId ? ` before message ${lastId}` : ''}`);
+        
+        // Properly type the fetch options
+        const fetchOptions = { limit: 100 } as { limit: number; before?: string };
+        if (lastId) {
+            fetchOptions.before = lastId;
+        }
+
+        try {
+            // Get messages as a Collection
+            const messageBatch = await channel.messages.fetch(fetchOptions);
+            
+            if (messageBatch.size === 0) {
+                console.log('No more messages to fetch');
+                break;
+            }
+
+            // Convert the Collection to an array of properly typed Message objects
+            const messageArray = Array.from(messageBatch.values()) as Message[];
+            
+            // Filter messages by date and exclude specified users
+            const filteredMessages = messageArray.filter(
+                (msg) => msg.createdAt > cutoffDate && 
+                         !appConfig.excludedUsers.includes(msg.author.id)
+            );
+            
+            if (filteredMessages.length === 0) {
+                console.log('No messages found in this batch that meet criteria');
+                
+                // If we've hit our batch limit with no results, give up
+                if (batchCount >= MAX_BATCHES) {
+                    console.log(`Reached maximum batch limit (${MAX_BATCHES}) with no valid messages found. Giving up.`);
+                    break;
+                }
+            } else {
+                // Add messages to our collection
+                messages.push(...filteredMessages);
+                console.log(`Batch ${batchCount}: Found ${filteredMessages.length} messages within timespan`);
+            }
+
+            // Get the ID of the last message for pagination
+            const lastMessage = messageBatch.last();
+            if (lastMessage) {
+                lastId = lastMessage.id;
+            }
+        } catch (error) {
+            console.error("Error fetching message batch:", error);
+            break;
+        }
+    }
+
+    console.log(`Total messages collected: ${messages.length}`);
+    
+    // Cache the messages for future use
+    saveMessagesToCache(messages, channel.guild.id, channel.id, timeSpanMonths);
+    
+    return messages;
 }
 
 // Remove or deprecate pollUserDataOld

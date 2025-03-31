@@ -2,17 +2,13 @@
   "name": "rockstarbot",
   "version": "1.0.0",
   "description": "A Discord bot that analyzes user messages using OpenAI's GPT.",
-  "main": "dist/service/index.js",
+  "main": "dist/services/index.js",
   "scripts": {
     "start": "node dist/index.js",
-    "start:bun": "bun run dist/index.js",
-    "service": "ts-node src/index.ts",
-    "service:bun": "bun run src/index.ts",
+    "dev": "ts-node src/index.ts",
     "build": "tsc",
     "build:bun": "bun build ./src --outdir=./dist --target=node",
-    "dev": "ts-node src/service/index.ts",
-    "dev:bun": "bun run src/service/index.ts",
-    "install-bun": "curl -fsSL https://bun.sh/install | bash"
+    "start:bun": "bun run dist/index.js"
   },
   "dependencies": {
     "discord.js": "^14.11.0",

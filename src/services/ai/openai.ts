@@ -1,5 +1,5 @@
 import { OpenAI } from 'openai';
-import { config } from '../config';
+import { config } from '../../config';
 
 const openai = new OpenAI({
   apiKey: config.openaiApiKey,
@@ -26,5 +26,28 @@ export async function analyzeMessages(messages: string[]): Promise<string> {
   } catch (error) {
     console.error('Error during OpenAI analysis:', error);
     throw new Error(`Error during OpenAI analysis: ${(error as Error).message}`);
+  }
+}
+
+export async function generateMessage(messages: string[], systemPrompt: string): Promise<string> {
+  try {
+    const prompt = `
+      Based on the following user messages, generate an example message that reflects how the user would typically behave or communicate:
+      ${messages.join("\n")}
+    `;
+    
+    const response = await openai.chat.completions.create({
+      model: config.openaiSimulationModel,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: prompt }
+      ],
+      temperature: 0.9,
+    });
+
+    return response.choices[0]?.message?.content || 'Could not generate a message';
+  } catch (error) {
+    console.error('Error during OpenAI message generation:', error);
+    throw new Error(`Error during message generation: ${(error as Error).message}`);
   }
 }

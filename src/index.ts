@@ -6,17 +6,19 @@ import { config } from 'dotenv';
 // Load environment variables from .env
 config();
 
-// Ensure cache directory exists
-const CACHE_DIR = path.join(__dirname, '../cache');
-if (!fs.existsSync(CACHE_DIR)) {
-  fs.mkdirSync(CACHE_DIR, { recursive: true });
-}
+// Setup required directories
+const directories = {
+  cache: path.join(__dirname, '../cache'),
+  output: path.join(__dirname, '../output')
+};
 
-// Ensure output directory exists
-const OUTPUT_DIR = path.join(__dirname, '../output');
-if (!fs.existsSync(OUTPUT_DIR)) {
-  fs.mkdirSync(OUTPUT_DIR, { recursive: true });
-}
+// Create directories if they don't exist
+Object.entries(directories).forEach(([name, dir]) => {
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+    console.log(`Created ${name} directory at ${dir}`);
+  }
+});
 
 // Setup process error handling
 process.on('uncaughtException', (error) => {
@@ -33,5 +35,4 @@ process.on('unhandledRejection', (reason, promise) => {
 console.log('Starting Discord bot service...');
 const client = startBot();
 
-// Export client for potential programmatic use
 export { client };

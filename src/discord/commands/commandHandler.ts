@@ -1,7 +1,7 @@
 import { ChatInputCommandInteraction, Client, GuildMember, TextChannel, Collection, Message } from 'discord.js';
 import { getUserIdFromUsername } from '../../utils/userUtils';
 import { getUserMessages } from '../../utils/userMessageUtils';
-import { generateExampleMessage } from '../../service/messageGenerator';
+import { generateExampleMessage } from '../../services/messageGenerator';
 import * as path from 'path';
 import * as fs from 'fs';
 import { config as appConfig } from "../../config";
