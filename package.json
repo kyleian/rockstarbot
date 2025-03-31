@@ -1,0 +1,23 @@
+{
+  "name": "rockstarbot",
+  "version": "1.0.0",
+  "description": "A Discord bot that analyzes user messages using OpenAI's GPT.",
+  "main": "dist/service/index.js",
+  "scripts": {
+    "start": "node dist/service/index.js",
+    "build": "tsc",
+    "dev": "ts-node src/service/index.ts"
+  },
+  "dependencies": {
+    "discord.js": "^14.11.0",
+    "dotenv": "^16.0.3",
+    "openai": "^4.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.2.2",
+    "ts-node": "^10.9.1"
+  },
+  "engines": {
+    "node": ">=22.14.0"
+  }
+}
