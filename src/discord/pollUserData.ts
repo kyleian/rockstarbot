@@ -6,11 +6,7 @@ import { config as appConfig } from "../config";
 
 config(); // Load environment variables
 
-const DISCORD_TOKEN = process.env.DISCORD_TOKEN as string;
-const FETCH_MODE = process.env.FETCH_MODE as string; // "guild" or "dm"
-const GUILD_ID = process.env.GUILD_ID as string;
-const CHANNEL_ID = process.env.CHANNEL_ID as string;
-const USER_ID = process.env.USER_ID as string;
+// Use unified config instead of direct env vars
 
 // Define cache directory
 const CACHE_DIR = path.join(__dirname, '../../cache');

@@ -1,4 +1,5 @@
 import { config as dotenvConfig } from 'dotenv';
+import { maskId } from './utils/maskData';
 
 // Load .env file
 dotenvConfig();
@@ -32,7 +33,26 @@ export const config = {
   
   // System paths
   cacheDir: process.env.CACHE_DIR || 'cache',
-  outputDir: process.env.OUTPUT_DIR || 'output'
+  outputDir: process.env.OUTPUT_DIR || 'output',
+
+  // User ID
+  userId: process.env.USER_ID || '',
+  
+  // Add validation logging that masks sensitive data
+  validate() {
+    const checks = [
+      { name: 'DISCORD_TOKEN', value: this.token?.substring(0, 8) + '...' },
+      { name: 'CLIENT_ID', value: maskId(this.clientId) },
+      { name: 'GUILD_ID', value: maskId(this.guildId) },
+      { name: 'USER_ID', value: this.userId ? maskId(this.userId) : 'not set' },
+      { name: 'OPENAI_API_KEY', value: this.openaiApiKey?.substring(0, 3) + '...' },
+      { name: 'CLAUDE_API_KEY', value: this.claudeApiKey ? '***' : 'not set' }
+    ];
+    
+    checks.forEach(({name, value}) => {
+      console.log(`Loaded ${name}: ${value}`);
+    });
+  }
 };
 
 // Validate required configuration
@@ -45,3 +65,5 @@ if (!config.openaiApiKey) throw new Error('OPENAI_API_KEY is required');
 if (config.useClaudeModel && !config.claudeApiKey) {
   throw new Error('CLAUDE_API_KEY is required when USE_CLAUDE is true');
 }
+
+config.validate();

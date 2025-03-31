@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { config } from '../config';
+import { maskId } from '../utils/maskData';
 
 // Constants
 const CACHE_DIR = path.join(__dirname, '../../cache');
@@ -81,16 +82,12 @@ function removeUserData(userId: string): void {
   }
 }
 
-function maskSensitiveData(data: string): string {
-  return `${data.substring(0, 4)}...${data.slice(-4)}`;
-}
-
 // Main function to process all excluded users
 async function cleanExcludedUsersData() {
   console.log('Starting cleanup for excluded users from environment configuration');
   
   // Hide actual user IDs in logs by masking them
-  const maskedIds = config.excludedUsers.map(id => maskSensitiveData(id));
+  const maskedIds = config.excludedUsers.map(id => maskId(id));
   console.log(`Found ${config.excludedUsers.length} excluded users: ${maskedIds.join(', ')}`);
   
   if (config.excludedUsers.length === 0) {

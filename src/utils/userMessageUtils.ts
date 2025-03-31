@@ -1,14 +1,10 @@
 import * as fs from "fs";
 import * as path from "path";
 import { Message } from "discord.js";
+import { maskId, maskSensitiveInfo } from './maskData';
 
 // Define cache directory - matching the one in pollUserData.ts
 const CACHE_DIR = path.join(__dirname, '../../cache');
-
-// Add utility function for masking sensitive data
-function maskSensitiveData(data: string): string {
-  return `${data.substring(0, 4)}...${data.slice(-4)}`;
-}
 
 /**
  * Takes a guild cache file and separates messages by user
@@ -53,7 +49,7 @@ export function separateMessagesByUser(guildCacheFilePath: string): Record<strin
       };
       
       fs.writeFileSync(userCacheFilePath, JSON.stringify(userData, null, 2), 'utf-8');
-      console.log(`Created user cache file with ${userMessages.length} messages for user ${maskSensitiveData(userId)}`);
+      console.log(`Created user cache file with ${userMessages.length} messages for user ${maskSensitiveInfo(userId)}`);
       userFilePaths[userId] = userCacheFilePath;
     }
     
@@ -77,7 +73,7 @@ export function getUserMessages(userId: string, guildId: string, channelId: stri
   if (fs.existsSync(userCacheFilePath)) {
     try {
       const userData = JSON.parse(fs.readFileSync(userCacheFilePath, 'utf-8'));
-      console.log(`Found cached messages for user ${maskSensitiveData(userId)} from ${userData.fetchDate}`);
+      console.log(`Found cached messages for user ${maskId(userId)} from ${userData.fetchDate}`);
       
       // Check if cache is still valid (less than 24 hours old)
       const cacheDate = new Date(userData.fetchDate);
@@ -114,6 +110,6 @@ export function getUserMessages(userId: string, guildId: string, channelId: stri
     }
   }
   
-  console.log(`No cached messages found for user ${maskSensitiveData(userId)}`);
+  console.log(`No cached messages found for user ${maskId(userId)}`);
   return null;
 }

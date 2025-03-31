@@ -1,5 +1,6 @@
 import { REST, Routes, SlashCommandBuilder } from 'discord.js';
 import { config } from '../../config';
+import { maskId } from '../../utils/maskData';
 
 const commands = [
   new SlashCommandBuilder()
@@ -17,8 +18,8 @@ export async function registerCommands() {
 
   try {
     console.log('Started refreshing application (/) commands:');
-    console.log(`Using Client ID: ${config.clientId}`);
-    console.log(`Using Guild ID: ${config.guildId}`);
+    console.log(`Using Client ID: ${maskId(config.clientId)}`);
+    console.log(`Using Guild ID: ${maskId(config.guildId)}`);
     
     // Log each command being registered
     commands.forEach(command => {

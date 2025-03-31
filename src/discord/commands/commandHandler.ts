@@ -5,6 +5,7 @@ import { generateExampleMessage } from '../../service/messageGenerator';
 import * as path from 'path';
 import * as fs from 'fs';
 import { config as appConfig } from "../../config";
+import { maskId, maskUsername } from '../../utils/maskData';
 
 // Cache directory - matching the one in userMessageUtils
 const CACHE_DIR = path.join(__dirname, '../../../cache');
@@ -41,17 +42,6 @@ async function saveUserMessagesToCache(messages: Message[], userId: string, guil
   
   fs.writeFileSync(userCacheFilePath, JSON.stringify(cacheData, null, 2), 'utf-8');
   console.log(`Cached ${messages.length} messages for user ${userId} to ${userCacheFilePath}`);
-}
-
-// Helper to mask sensitive IDs and usernames in logs
-function maskId(id: string): string {
-  if (!id) return 'undefined';
-  return `${id.substring(0, 4)}...${id.slice(-4)}`;
-}
-
-function maskUsername(username: string): string {
-  if (!username || username.length <= 2) return username;
-  return `${username.charAt(0)}${'*'.repeat(username.length - 2)}${username.charAt(username.length - 1)}`;
 }
 
 /**
